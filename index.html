@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Daily Attendance</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f8; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 16px; }
+    .card { background: #ffffff; padding: 28px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 400px; box-sizing: border-box; }
+    h2 { margin-top: 0; color: #1a1a1a; font-size: 22px; }
+    label { font-size: 14px; font-weight: 600; color: #4a5568; display: block; margin-bottom: 6px; }
+    input, select, button { width: 100%; padding: 12px; margin-bottom: 18px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 15px; box-sizing: border-box; }
+    button { background-color: #2563eb; color: white; font-weight: 600; border: none; cursor: pointer; transition: background 0.2s; }
+    button:hover { background-color: #1d4ed8; }
+    .status { font-size: 14px; color: #4a5568; text-align: center; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Daily Attendance Check-In</h2>
+  
+  <label for="name">Full Name</label>
+  <input type="text" id="name" placeholder="Enter your full name" required>
+
+  <label for="status">Attendance Status</label>
+  <select id="status">
+    <option value="Present - On Site">Present - On Site</option>
+    <option value="Present - Field Visit">Present - Field Visit</option>
+    <option value="Present - Remote / Work From Home">Present - Remote / Work From Home</option>
+  </select>
+
+  <button onclick="markAttendance()">Mark Present</button>
+  <div class="status" id="statusMessage"></div>
+</div>
+
+<script>
+  // Paste your Apps Script Web App URL below
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlUdfqKhbOO085PwCDp4YX8lZphQqwBMf2kPpq3GRBEiXDf3BirtBiUnE70e-Mux8HDA/exec";
+
+  function markAttendance() {
+    const name = document.getElementById('name').value.trim();
+    const status = document.getElementById('status').value;
+    const messageEl = document.getElementById('statusMessage');
+
+    if (!name) {
+      alert("Please enter your name.");
+      return;
+    }
+
+    messageEl.innerText = "Getting your location...";
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const payload = {
+            name: name,
+            status: status,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          };
+
+          messageEl.innerText = "Recording attendance...";
+
+          fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          })
+          .then(() => {
+            messageEl.innerText = "Success! Attendance recorded successfully.";
+            document.getElementById('name').value = '';
+          })
+          .catch(error => {
+            messageEl.innerText = "Error recording attendance. Please try again.";
+            console.error(error);
+          });
+        },
+        (error) => {
+          messageEl.innerText = "Location access denied. Please enable GPS to mark presence.";
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
+      messageEl.innerText = "Geolocation is not supported by your browser.";
+    }
+  }
+</script>
+
+</body>
+</html>
